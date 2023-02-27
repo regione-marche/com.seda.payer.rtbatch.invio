@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="com.seda.payer.rtbatch.invio" default="make.dist" basedir=".">
+
+	<property file="build.properties" />
+
+	<fileset id="compile.classpath" dir="${dir.lib}">
+		<include name="*.jar" />
+	</fileset>
+	<fileset id="dep.base" file="${file.jar.base.location}" />
+
+
+
+	<!-- ================================= 
+          target: init              
+         ================================= -->
+	<target name="init" description="pulisce la directory di build e ne ricrea la struttura base">
+		<mkdir dir="${dir.build}" />
+		<delete includeemptydirs="yes">
+			<fileset dir="${dir.build}">
+				<include name="**/*" />
+			</fileset>
+		</delete>
+		<mkdir dir="${dir.classes}" />
+	</target>
+
+
+
+	<!-- ================================= 
+          target: compile              
+         ================================= -->
+	<target name="compile" depends="init" description="compilazione dei file sorgente">
+		<javac destdir="${dir.classes}" debug="true" debuglevel="lines,vars,source" optimize="true" source="1.6" target="1.6" includeantruntime="false">
+			<src path="${dir.src}">
+			</src>
+			<classpath>
+				<fileset refid="compile.classpath" />
+				<fileset file="${seda.payer.base.jar}" />
+			</classpath>
+		</javac>
+	</target>
+
+
+
+	<!-- ================================= 
+          target: make.jar              
+         ================================= -->
+	<target name="make.jar" depends="compile" description="crea un archivio jar eseguibile">
+		<copy todir="${dir.build}/lib">
+			<fileset dir="${dir.lib}">
+				<include name="*.jar" />
+			</fileset>
+		</copy>
+		<copy todir="${dir.build}/lib">
+			<fileset dir="${seda.payer.base.home}/build">
+				<include name="*.jar" />
+			</fileset>
+		</copy>
+		<copy todir="${dir.classes}">
+			<fileset dir="${dir.src}">
+				<exclude name="**/*.java" />
+			</fileset>
+		</copy>
+
+		<path id="pp">
+			<fileset id="fs.manifest.classpath" dir="${dir.build}/lib">
+				<include name="*.jar" />
+			</fileset>
+		</path>
+
+		<pathconvert property="manifest.classpath" pathsep=" ">
+			<path refid="pp" />
+			<mapper>
+				<chainedmapper>
+					<flattenmapper />
+					<globmapper from="*.jar" to="lib/*.jar" />
+				</chainedmapper>
+			</mapper>
+		</pathconvert>
+
+		<jar destfile="${dir.build}/${ant.project.name}.jar">
+			<fileset dir="${dir.classes}" />
+			<manifest>
+				<attribute name="Main-Class" value="com.seda.payer.rtbatch.invio.Main" />
+				<attribute name="Class-Path" value="${manifest.classpath}" />
+			</manifest>
+		</jar>
+	</target>
+
+
+
+	<!-- ================================= 
+          target: make.dist              
+         ================================= -->
+	<target name="make.dist" depends="make.jar" description="crea un archivio zip con il jar eseguibile e la directory delle dipendenze">
+		<zip destfile="${ant.project.name}.zip">
+			<fileset dir="${dir.build}">
+				<include name="*.jar" />
+				<include name="lib/*.jar" />
+			</fileset>
+		</zip>
+
+	</target>
+
+</project>
