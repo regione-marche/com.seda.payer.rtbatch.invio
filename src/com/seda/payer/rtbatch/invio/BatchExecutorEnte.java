@@ -14,6 +14,7 @@ import java.util.Date;
 
 import org.apache.log4j.Logger;
 
+import com.seda.data.procedure.reflection.MetaProcedure;
 import com.seda.payer.rtbatch.base.commons.EnteDto;
 import com.seda.payer.rtbatch.base.commons.MailClient;
 import com.seda.payer.rtbatch.base.commons.RicevutaTelematicaDto;
@@ -33,6 +34,7 @@ class BatchExecutorEnte {
 	private static final Logger log = Logger.getLogger(LOGGER_CATEGORY_INVIO);
 
 	private Connection connection;
+	private String schema; //LP 20240801
 	private CallableStatement pycftsp_lstrt_batch;
 	private CallableStatement pycftsp_upd_batch;
 	private CallableStatement pyrsqsp_nxt_batch;
@@ -57,10 +59,18 @@ class BatchExecutorEnte {
 		startTime = new Date();
 		try {
 			connection = DaoFactory.getInstance().getConnection();
-			pycftsp_lstrt_batch = connection.prepareCall("{call PYCFTSP_LSTRT_BATCH(?, ?)}");
+			//inizio LP 20240801
+			//pycftsp_lstrt_batch = connection.prepareCall("{call PYCFTSP_LSTRT_BATCH(?, ?)}");			
+			schema = DaoFactory.getInstance().getSchema();
+			pycftsp_lstrt_batch = MetaProcedure.prepareCall(connection, schema, "PYCFTSP_LSTRT_BATCH");
+			//fine LP 20240801
 			pycftsp_lstrt_batch.setString(2, "N");
-			pycftsp_upd_batch = connection.prepareCall("{call PYCFTSP_UPD_BATCH(?, ?, ?, ?, ?, ?, ?)}");
-			pyrsqsp_nxt_batch = connection.prepareCall("{call PYKEYSP_BIGINT(?,?)}");
+			//inizio LP 20240801
+			//pycftsp_upd_batch = connection.prepareCall("{call PYCFTSP_UPD_BATCH(?, ?, ?, ?, ?, ?, ?)}");
+			//pyrsqsp_nxt_batch = connection.prepareCall("{call PYKEYSP_BIGINT(?,?)}");
+			pycftsp_upd_batch = MetaProcedure.prepareCall(connection, schema, "PYCFTSP_UPD_BATCH");
+			pyrsqsp_nxt_batch = MetaProcedure.prepareCall(connection, schema, "PYKEYSP_BIGINT");
+			//inizio LP 20240801
 		} catch (SQLException e) {
 			shutdown();
 			String errorMessage = "Eccezione nella preparazione delle procedure di accesso ai dati";
@@ -127,8 +137,14 @@ class BatchExecutorEnte {
 		}
 		int updatedRows = -1;
 		try {
-			pycftsp_upd_batch.executeQuery();
-			updatedRows = pycftsp_upd_batch.getInt(7);
+			//inizio LP 20240801
+			//pycftsp_upd_batch.executeQuery();
+			if(pycftsp_upd_batch.execute()) {
+			//fine LP 20240801
+				updatedRows = pycftsp_upd_batch.getInt(7);
+			//inizio LP 20240801
+			}
+			//fine LP 20240801
 		} catch (SQLException e) {
 			riepilogoElaborazione.erroriInterni++;
 			riepilogoElaborazione.erroriAggiornamentoStatoRT++;
@@ -140,10 +156,8 @@ class BatchExecutorEnte {
 		if (updatedRows == 0) {
 			riepilogoElaborazione.erroriInterni++;
 			riepilogoElaborazione.erroriAggiornamentoStatoRT++;
-			log
-					.warn("Condizione anomala: stored procedure di aggiornamento stato riga eseguita correttamente, ma questa non riporta alcuna riga aggiornata");
-			String warningLine = String.format("chiave della riga da aggiornare <%s> | risultato versamento <%s>",
-					rtKey, versamentoResult);
+			log.warn("Condizione anomala: stored procedure di aggiornamento stato riga eseguita correttamente, ma questa non riporta alcuna riga aggiornata");
+			String warningLine = String.format("chiave della riga da aggiornare <%s> | risultato versamento <%s>", rtKey, versamentoResult);
 			log.warn(warningLine);
 			return;
 		}
@@ -151,8 +165,7 @@ class BatchExecutorEnte {
 			riepilogoElaborazione.erroriInterni++;
 			riepilogoElaborazione.erroriAggiornamentoStatoRT++;
 			log.warn("Condizione anomala: valore delle righe aggiornate NON modificato");
-			String warningLine = String.format("chiave della riga da aggiornare <%s> | risultato versamento <%s>",
-					rtKey, versamentoResult);
+			String warningLine = String.format("chiave della riga da aggiornare <%s> | risultato versamento <%s>", rtKey, versamentoResult);
 			log.warn(warningLine);
 		}
 
@@ -178,13 +191,21 @@ class BatchExecutorEnte {
 		try {
 			// ottiene l'elenco di RT da inviare per l'ente corrente
 			pycftsp_lstrt_batch.setString(1, ente.getCCFTIDPA());
-			rsListaRicevute = pycftsp_lstrt_batch.executeQuery();
-
-			// elabora la lista delle RT
-			processResultSetRicevute(ente, rsListaRicevute, metadataGenerator, ricevutaTelematicaVersamento);
-
-			// questo si commenta da solo
-			inviaEmailRiepilogativa(ente.getCCFTEMAI());
+			//inizio LP 20240801
+			//rsListaRicevute = pycftsp_lstrt_batch.executeQuery();
+			if(pycftsp_lstrt_batch.execute()) {
+				rsListaRicevute = pycftsp_lstrt_batch.getResultSet();
+				if(rsListaRicevute != null) {
+			//fine LP 20240801
+					// elabora la lista delle RT
+					processResultSetRicevute(ente, rsListaRicevute, metadataGenerator, ricevutaTelematicaVersamento);
+		
+					// questo si commenta da solo
+					inviaEmailRiepilogativa(ente.getCCFTEMAI());
+			//inizio LP 20240801
+				}
+			}
+			//fine LP 20240801
 		} catch (SQLException e) {
 			String errorMessageFmt = "Errore nell'accesso ai dati o al recupero di informazioni dalle procedure - SQLSTATE %s - SQLCODE %d";
 			String errorMessage = String.format(errorMessageFmt, e.getSQLState(), e.getErrorCode());
@@ -230,8 +251,7 @@ class BatchExecutorEnte {
 				// inizializza un DTO con i dati sulla ricevuta
 				RicevutaTelematicaDto ricevutaDto = extractDataFromResultSet(rsListaRicevute);
 				if (ricevutaDto == null) {
-					log
-							.error("impossibile creare il dto per una ricevuta telematica - nessun dato disponibile da inviare");
+					log.error("impossibile creare il dto per una ricevuta telematica - nessun dato disponibile da inviare");
 					riepilogoElaborazione.ricevuteNonElaborate++;
 					continue;
 				}
@@ -247,8 +267,7 @@ class BatchExecutorEnte {
 				// ottiene un progressivo dal db
 				Long sequenceNumber = getNextSequenceNumber();
 				if (sequenceNumber == null) {
-					log
-							.error("impossibile ottenere il prossimo progressivo dal db - impossibile continuare con l'elaborazione della presente RT");
+					log.error("impossibile ottenere il prossimo progressivo dal db - impossibile continuare con l'elaborazione della presente RT");
 					riepilogoElaborazione.erroriInterni++;
 					continue;
 				}
@@ -317,8 +336,14 @@ class BatchExecutorEnte {
 		try {
 			pyrsqsp_nxt_batch.setString(1, "RSQ");
 			pyrsqsp_nxt_batch.registerOutParameter(2, Types.BIGINT);
-			pyrsqsp_nxt_batch.executeQuery();
-			return pyrsqsp_nxt_batch.getLong(2);
+			//inizio LP 20240801
+			//pyrsqsp_nxt_batch.executeQuery();
+			if(pyrsqsp_nxt_batch.execute()) {
+			//fine LP 20240801
+				return pyrsqsp_nxt_batch.getLong(2);
+			} else {
+				return null;
+			}
 		} catch (SQLException e) {
 			log.error("errore nell'ottenimento del progressivo per l'identificazione dell'invio", e);
 			return null;
@@ -338,18 +363,15 @@ class BatchExecutorEnte {
 		sbEmailContent.append(SimpleDateFormat.getDateTimeInstance().format(startTime));
 		sbEmailContent.append("\n");
 		sbEmailContent.append(String.format("Totale ricevute inviate : %d%n", riepilogoElaborazione.totaleRtElaborate));
-		sbEmailContent.append(String.format("Ricevute inviate correttamente : %d%n",
-				riepilogoElaborazione.inviiCorretti));
+		sbEmailContent.append(String.format("Ricevute inviate correttamente : %d%n", riepilogoElaborazione.inviiCorretti));
 		sbEmailContent.append(String.format("Ricevute con invio erroneo : %d%n", riepilogoElaborazione.inviiConErrore));
 
 		if (!Main.isDryRun()) {
 			try {
 				MailClient mailClient = new MailClient(ENV_INVIO_CFG_FILE_LOCATION, LOGGER_CATEGORY_INVIO);
-				mailClient.sendMail(enteEmailAddress, "Resoconto di invio ricevute telematiche", sbEmailContent
-						.toString());
+				mailClient.sendMail(enteEmailAddress, "Resoconto di invio ricevute telematiche", sbEmailContent.toString());
 			} catch (Exception e) {
-				String errorMessage = String.format("Errore nel processo di invio email all'ente <%s>",
-						enteEmailAddress);
+				String errorMessage = String.format("Errore nel processo di invio email all'ente <%s>", enteEmailAddress);
 				log.error(errorMessage, e);
 			}
 		}

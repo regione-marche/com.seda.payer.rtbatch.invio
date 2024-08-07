@@ -12,7 +12,7 @@
    <parent>
       <groupId>it.maggioli.informatica.base.pom</groupId>
       <artifactId>pagonet-base</artifactId>
-      <version>1.1</version>
+      <version>1.4.0</version> <!-- LP 20240801 -->
       <relativePath/>
    </parent>
 
@@ -75,8 +75,8 @@
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.seda.payer.rtbatch</groupId>
-			<artifactId>com.seda.payer.rtbatch</artifactId>
+			<groupId>com.seda.payer.rtbatch.base</groupId> <!-- LP 20240801 -->
+			<artifactId>com.seda.payer.rtbatch.base</artifactId> <!-- LP 20240801 -->
 			<version>1.0</version>
 			<scope>compile</scope>
 		</dependency>
@@ -86,12 +86,11 @@
 			<version>5.1.48</version>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/javax.mail/mail -->
-<dependency>
-    <groupId>javax.mail</groupId>
-    <artifactId>mail</artifactId>
-    <version>1.4</version>
-     <scope>compile</scope>
-</dependency>
-		
+		<dependency>
+		    <groupId>javax.mail</groupId>
+		    <artifactId>mail</artifactId>
+		    <version>1.4</version>
+		     <scope>compile</scope>
+		</dependency>
 	</dependencies>
 </project>

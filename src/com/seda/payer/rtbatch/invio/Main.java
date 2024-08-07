@@ -95,15 +95,13 @@ public class Main {
 			fileIn = new FileInputStream(optionsFileLocation);
 			generalProperties.load(fileIn);
 		} catch (FileNotFoundException e) {
-			String errorMessage = String.format("il file di configurazione specificato <%s> non esiste",
-					optionsFileLocation);
+			String errorMessage = String.format("il file di configurazione specificato <%s> non esiste", optionsFileLocation);
 			System.err.println(errorMessage);
 			e.printStackTrace();
 			log.error(errorMessage, e);
 			System.exit(3);
 		} catch (IOException e) {
-			String errorMessage = String.format("impossibile leggere il file di configurazione <%s>",
-					optionsFileLocation);
+			String errorMessage = String.format("impossibile leggere il file di configurazione <%s>", optionsFileLocation);
 			System.err.println(errorMessage);
 			e.printStackTrace();
 			log.error(errorMessage, e);
@@ -169,8 +167,7 @@ public class Main {
 			log.error("Errore nella creazione dell'oggetto di accesso ai dati", e);
 			System.exit(5);
 		} catch (BatchExecutionException e) {
-			log.error("Errore di esecuzione della procedura per la provincia " + argumentsMap.get(ARG_SIGLA_PROVINCIA),
-					e);
+			log.error("Errore di esecuzione della procedura per la provincia " + argumentsMap.get(ARG_SIGLA_PROVINCIA), e);
 		} catch (SecurityException e) {
 			log.error("Errore durante l'impostazione del provider JCE", e);
 			log.warn("I provider JCE attualmente in uso sono i seguenti:");
