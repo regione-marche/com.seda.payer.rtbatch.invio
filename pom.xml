@@ -7,8 +7,7 @@
 	<version>1.0</version>
 	<name>com.seda.payer.rtbatch.invio</name>
 	<description>com.seda.payer.rtbatch.invio</description>
-	
-	
+
    <parent>
       <groupId>it.maggioli.informatica.base.pom</groupId>
       <artifactId>pagonet-base</artifactId>
@@ -16,7 +15,6 @@
       <relativePath/>
    </parent>
 
-	
 	<build>
 		<sourceDirectory>src</sourceDirectory>
 		<plugins>

@@ -137,14 +137,8 @@ class BatchExecutorEnte {
 		}
 		int updatedRows = -1;
 		try {
-			//inizio LP 20240801
-			//pycftsp_upd_batch.executeQuery();
-			if(pycftsp_upd_batch.execute()) {
-			//fine LP 20240801
-				updatedRows = pycftsp_upd_batch.getInt(7);
-			//inizio LP 20240801
-			}
-			//fine LP 20240801
+			pycftsp_upd_batch.executeQuery();
+			updatedRows = pycftsp_upd_batch.getInt(7);
 		} catch (SQLException e) {
 			riepilogoElaborazione.erroriInterni++;
 			riepilogoElaborazione.erroriAggiornamentoStatoRT++;
@@ -199,7 +193,6 @@ class BatchExecutorEnte {
 			//fine LP 20240801
 					// elabora la lista delle RT
 					processResultSetRicevute(ente, rsListaRicevute, metadataGenerator, ricevutaTelematicaVersamento);
-		
 					// questo si commenta da solo
 					inviaEmailRiepilogativa(ente.getCCFTEMAI());
 			//inizio LP 20240801
@@ -336,14 +329,8 @@ class BatchExecutorEnte {
 		try {
 			pyrsqsp_nxt_batch.setString(1, "RSQ");
 			pyrsqsp_nxt_batch.registerOutParameter(2, Types.BIGINT);
-			//inizio LP 20240801
-			//pyrsqsp_nxt_batch.executeQuery();
-			if(pyrsqsp_nxt_batch.execute()) {
-			//fine LP 20240801
-				return pyrsqsp_nxt_batch.getLong(2);
-			} else {
-				return null;
-			}
+			pyrsqsp_nxt_batch.executeQuery();
+			return pyrsqsp_nxt_batch.getLong(2);
 		} catch (SQLException e) {
 			log.error("errore nell'ottenimento del progressivo per l'identificazione dell'invio", e);
 			return null;
