@@ -4,7 +4,6 @@ import static com.seda.payer.rtbatch.RtBatchEnvironment.ENV_INVIO_CFG_FILE_LOCAT
 import static com.seda.payer.rtbatch.RtBatchEnvironment.LOGGER_CATEGORY_INVIO;
 
 import java.sql.CallableStatement;
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -14,11 +13,13 @@ import java.util.Date;
 
 import org.apache.log4j.Logger;
 
-import com.seda.data.procedure.reflection.MetaProcedure;
 import com.seda.payer.rtbatch.base.commons.EnteDto;
 import com.seda.payer.rtbatch.base.commons.MailClient;
 import com.seda.payer.rtbatch.base.commons.RicevutaTelematicaDto;
+import com.seda.payer.rtbatch.base.datalayer.DaoCreationException;
+import com.seda.payer.rtbatch.base.datalayer.DaoException;
 import com.seda.payer.rtbatch.base.datalayer.DaoFactory;
+import com.seda.payer.rtbatch.base.datalayer.RtRepositoryDao;
 
 /**
  * Esegue l'eleborazione batch per un ente specifico.
@@ -33,8 +34,8 @@ class BatchExecutorEnte {
 
 	private static final Logger log = Logger.getLogger(LOGGER_CATEGORY_INVIO);
 
-	private Connection connection;
-	private String schema; //LP 20240801
+	//private Connection connection;
+	//private String schema; //LP 20240801
 	private CallableStatement pycftsp_lstrt_batch;
 	private CallableStatement pycftsp_upd_batch;
 	private CallableStatement pyrsqsp_nxt_batch;
@@ -58,25 +59,37 @@ class BatchExecutorEnte {
 		riepilogoElaborazione = new RiepilogoElaborazioneInvio();
 		startTime = new Date();
 		try {
-			connection = DaoFactory.getInstance().getConnection();
-			//inizio LP 20240801
+			//inizio LP 20240801 PGNTBRTCN-1
+			//connection = DaoFactory.getInstance().getConnection();
 			//pycftsp_lstrt_batch = connection.prepareCall("{call PYCFTSP_LSTRT_BATCH(?, ?)}");			
-			schema = DaoFactory.getInstance().getSchema();
-			pycftsp_lstrt_batch = MetaProcedure.prepareCall(connection, schema, "PYCFTSP_LSTRT_BATCH");
-			//fine LP 20240801
-			pycftsp_lstrt_batch.setString(2, "N");
-			//inizio LP 20240801
+			//pycftsp_lstrt_batch = MetaProcedure.prepareCall(connection, schema, "PYCFTSP_LSTRT_BATCH");
+			//pycftsp_lstrt_batch.setString(2, "N");
 			//pycftsp_upd_batch = connection.prepareCall("{call PYCFTSP_UPD_BATCH(?, ?, ?, ?, ?, ?, ?)}");
 			//pyrsqsp_nxt_batch = connection.prepareCall("{call PYKEYSP_BIGINT(?,?)}");
-			pycftsp_upd_batch = MetaProcedure.prepareCall(connection, schema, "PYCFTSP_UPD_BATCH");
-			pyrsqsp_nxt_batch = MetaProcedure.prepareCall(connection, schema, "PYKEYSP_BIGINT");
-			//inizio LP 20240801
+			RtRepositoryDao appo = DaoFactory.getInstance().createDao();
+			pycftsp_lstrt_batch = appo.getPycftsp_lstrt_batch();
+			pycftsp_lstrt_batch.setString(2, "Y");
+			pycftsp_upd_batch = appo.getPycftsp_upd_batch();
+			pyrsqsp_nxt_batch = appo.getPykeysp_bigint();
+			//fine LP 20240801 PGNTBRTCN-1
 		} catch (SQLException e) {
 			shutdown();
 			String errorMessage = "Eccezione nella preparazione delle procedure di accesso ai dati";
 			log.error(errorMessage, e);
 			throw new EnteProcessingException(errorMessage, e);
+		//inizio LP 20240801 PGNTBRTCN-1
+		} catch (DaoCreationException e) {
+			shutdown();
+			String errorMessage = "Eccezione nella preparazione delle procedure di accesso ai dati";
+			log.error(errorMessage, e);
+			throw new EnteProcessingException(errorMessage, e);
+		} catch (DaoException e) {
+			shutdown();
+			String errorMessage = "Eccezione nella preparazione delle procedure di accesso ai dati";
+			log.error(errorMessage, e);
+			throw new EnteProcessingException(errorMessage, e);
 		}
+		//fine LP 20240801 PGNTBRTCN-1
 	}
 
 	/**
