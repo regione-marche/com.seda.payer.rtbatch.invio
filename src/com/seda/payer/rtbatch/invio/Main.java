@@ -27,6 +27,7 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
+import com.seda.data.spi.DaoHandler;
 import com.seda.payer.rtbatch.base.datalayer.DaoCreationException;
 import com.seda.payer.rtbatch.base.datalayer.DaoFactory;
 import com.seda.payer.rtbatch.base.datalayer.FactoryConfigurationException;
@@ -154,10 +155,12 @@ public class Main {
 	}
 
 	private static void executeBatch() {
+		RtRepositoryDao dao = null;
 		try {
 			Security.insertProviderAt(new BouncyCastleProvider(), 1);
 			log.info("Accesso ai dati configurato. Connessione in corso.");
-			RtRepositoryDao dao = DaoFactory.getInstance().createDao();
+			//RtRepositoryDao dao = DaoFactory.getInstance().createDao();
+			dao = DaoFactory.getInstance().createDao();
 
 			log.info("Inizio elaborazione per provincia [" + argumentsMap.get(ARG_SIGLA_PROVINCIA) + "]");
 			BatchExecutor batchExecutor = new BatchExecutor(argumentsMap.get(ARG_SIGLA_PROVINCIA), dao);
@@ -176,6 +179,10 @@ public class Main {
 			}
 		} finally {
 			DaoFactory.getInstance().cleanUp();
+			if(dao != null) {
+				((DaoHandler) dao).finalize();
+				dao = null;
+			}
 		}
 	}
 
