@@ -5,6 +5,7 @@ import static com.seda.payer.rtbatch.RtBatchEnvironment.LOGGER_CATEGORY_INVIO;
 import com.seda.payer.rtbatch.base.commons.EnteDto;
 import com.seda.payer.rtbatch.base.datalayer.DaoException;
 import com.seda.payer.rtbatch.base.datalayer.RtRepositoryDao;
+
 import org.apache.log4j.Logger;
 
 import java.util.List;
@@ -38,13 +39,25 @@ class BatchExecutor {
 			log.warn("Nessun ente per la provincia specificata");
 		}
 		BatchExecutorEnte executorEnte;
+		//inizio LP 20241004 - PGNTBRTB-1
+		//for (EnteDto ente : listaEnti) {
+		//	executorEnte = new BatchExecutorEnte();
+		//	try {
+		//		executorEnte.processEnte(ente);
+		//	} finally {
+		//		executorEnte.shutdown();
+		//	}
+		//}
+		executorEnte = new BatchExecutorEnte(dao);
 		for (EnteDto ente : listaEnti) {
-			executorEnte = new BatchExecutorEnte();
-			try {
-				executorEnte.processEnte(ente);
-			} finally {
-				executorEnte.shutdown();
+			if(executorEnte != null) {
+				try {
+					executorEnte.processEnte(ente);
+				} catch (EnteProcessingException e) {
+					throw new BatchExecutionException(e.getMessage());
+				}
 			}
 		}
+		//fine LP 20241004 - PGNTBRTB-1
 	}
 }

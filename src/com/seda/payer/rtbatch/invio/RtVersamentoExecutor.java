@@ -17,7 +17,6 @@ import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
-import com.seda.payer.rtbatch.StatoProtocollazione;
 import com.seda.payer.rtbatch.base.util.StringUtils;
 import com.seda.payer.rtbatch.invio.response.EsitoChiamataWS;
 import com.seda.payer.rtbatch.invio.response.EsitoDocumentoPrincipale;

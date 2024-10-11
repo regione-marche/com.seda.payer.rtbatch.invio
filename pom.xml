@@ -7,16 +7,14 @@
 	<version>1.0</version>
 	<name>com.seda.payer.rtbatch.invio</name>
 	<description>com.seda.payer.rtbatch.invio</description>
-	
-	
+
    <parent>
       <groupId>it.maggioli.informatica.base.pom</groupId>
       <artifactId>pagonet-base</artifactId>
-      <version>1.1</version>
+      <version>1.4.0</version> <!-- LP 20240801 - PGNTBRTIN-1 -->
       <relativePath/>
    </parent>
 
-	
 	<build>
 		<sourceDirectory>src</sourceDirectory>
 		<plugins>
@@ -71,27 +69,25 @@
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
 			<artifactId>bcprov-jdk16</artifactId>
-			<version>1.45</version>
+			<!-- <version>1.45</version> --> <!-- LP 20240801 - PGNTBRTIN-1 -->
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.seda.payer.rtbatch</groupId>
-			<artifactId>com.seda.payer.rtbatch</artifactId>
+			<groupId>com.seda.payer.rtbatch.base</groupId> <!-- LP 20240801 - PGNTBRTIN-1 -->
+			<artifactId>com.seda.payer.rtbatch.base</artifactId> <!-- LP 20240801 - PGNTBRTIN-1 -->
 			<version>1.0</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
-			<version>5.1.48</version>
+			<!-- <version>5.1.48</version> --> <!-- LP 20240801 - PGNTBRTIN-1 -->
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/javax.mail/mail -->
-<dependency>
-    <groupId>javax.mail</groupId>
-    <artifactId>mail</artifactId>
-    <version>1.4</version>
-     <scope>compile</scope>
-</dependency>
-		
+		<dependency>
+		    <groupId>javax.mail</groupId>
+		    <artifactId>mail</artifactId>
+		    <version>1.4</version>
+		     <scope>compile</scope>
+		</dependency>
 	</dependencies>
 </project>
